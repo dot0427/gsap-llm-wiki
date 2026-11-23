@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GSAP 入門：10 分鐘讓網頁動起來</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#10131a;--panel:#191e28;--ink:#eef1f6;--mute:#93a0b4;--acc:#b8f34a;--acc2:#7cc4ff;--warn:#ffb86b;--line:#2a3140}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif}
+.deck{display:flex;height:100vh;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.deck::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;min-width:0;height:100vh;scroll-snap-align:start;padding:6vh 7vw 11vh;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+h1{font-size:clamp(34px,5.4vw,68px);font-weight:900;line-height:1.15;letter-spacing:.01em}
+h2{font-size:clamp(26px,3.4vw,44px);font-weight:900;margin-bottom:2.4vh}
+h2 small{display:block;font-size:.42em;color:var(--acc);font-weight:700;letter-spacing:.12em;margin-bottom:.6em}
+p,li{font-size:clamp(16px,1.55vw,21px);line-height:1.75;color:#d5dbe5}
+ul{padding-left:1.2em}li{margin:.25em 0}
+b,strong{color:var(--acc)}
+code{font-family:"JetBrains Mono",monospace;font-size:.92em;background:#232a37;padding:.08em .4em;border-radius:5px;color:#e6f7c7}
+pre{background:#0b0e13;border:1px solid var(--line);border-radius:12px;padding:16px 20px;overflow:auto;font-family:"JetBrains Mono",monospace;font-size:clamp(13px,1.2vw,16px);line-height:1.7;color:#dfe6f0}
+pre code{background:none;padding:0;color:inherit}
+.c{color:#6b7891}.k{color:var(--acc2)}.s{color:var(--acc)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:3vw;align-items:center}
+.grid>*{min-width:0}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:16px;min-height:230px;position:relative;padding:22px;overflow:hidden}
+.box{width:64px;height:64px;border-radius:14px;background:var(--acc);display:grid;place-items:center;color:#10131a;font-weight:900}
+.btn{font:inherit;font-weight:700;font-size:15px;border:0;border-radius:999px;padding:9px 18px;background:var(--acc);color:#10131a;cursor:pointer;margin:12px 8px 0 0}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.wiki{position:absolute;left:7vw;bottom:5.2vh;font-size:13px;color:var(--mute);letter-spacing:.03em}
+.wiki span{color:var(--acc2)}
+.tag{display:inline-block;font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px;background:#232a37;color:var(--acc);margin-right:6px}
+table{border-collapse:collapse;width:100%;font-size:clamp(14px,1.35vw,18px)}
+td,th{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+th{color:var(--mute);font-weight:500}
+td:first-child{white-space:nowrap}
+.nav{position:fixed;right:3vw;bottom:3.5vh;display:flex;gap:8px;align-items:center;z-index:5}
+.nav button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:18px;cursor:pointer}
+.count{font-family:"JetBrains Mono";color:var(--mute);font-size:13px;margin-right:8px}
+.bar{position:fixed;left:0;top:0;height:3px;background:var(--acc);width:0;z-index:5;transition:width .3s}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:2vh}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.step .n{font-family:"JetBrains Mono";color:var(--acc);font-size:28px;font-weight:600}
+.step p{font-size:15px;line-height:1.5}
+.ball-row{display:flex;align-items:center;gap:12px;height:46px}
+.ball-row label{width:110px;font-family:"JetBrains Mono";font-size:13px;color:var(--mute)}
+.ball{width:30px;height:30px;border-radius:50%;background:var(--acc2)}
+.cards{display:flex;gap:12px;flex-wrap:wrap}
+.card{width:70px;height:96px;border-radius:12px;background:linear-gradient(160deg,var(--acc),#5fd18a);display:grid;place-items:center;font-weight:900;color:#10131a;font-size:24px}
+.viewport-diag{position:relative;height:250px;border:2px dashed var(--acc2);border-radius:12px}
+.viewport-diag .mid{position:absolute;left:0;right:0;top:50%;border-top:2px solid var(--warn)}
+.viewport-diag .mid span{position:absolute;right:8px;top:-24px;color:var(--warn);font-size:13px}
+.viewport-diag .el{position:absolute;left:12%;width:42%;height:90px;background:var(--acc);border-radius:10px;color:#10131a;font-weight:900;display:grid;place-items:center}
+.viewport-diag .el::before{content:"top";position:absolute;top:-2px;right:-48px;color:var(--acc);font-size:13px}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.quiz{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:10px 0;cursor:pointer}
+.quiz .a{display:none;color:var(--acc);margin-top:6px}
+.quiz.open .a{display:block}
+.cover-bg{position:absolute;inset:0;pointer-events:none}
+.dot{position:absolute;border-radius:50%;opacity:.85}
+.warn{color:var(--warn)}
+@media (max-width:760px){.grid{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.slide{padding:6vh 6vw 13vh;justify-content:flex-start;overflow-y:auto}}
+</style>
+</head>
+<body>
+<div class="bar" id="bar"></div>
+<main class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide" data-wiki="index">
+  <div class="cover-bg" id="coverBg"></div>
+  <p class="tag">教學簡報 ・ 資料來源：自建 GSAP LLM Wiki</p>
+  <h1 style="margin-top:2vh">GSAP 入門<br>10 分鐘讓網頁<span style="color:var(--acc)">動起來</span></h1>
+  <p style="margin-top:3vh;color:var(--mute)">給「會寫一點 HTML / CSS / JS、但沒碰過動畫函式庫」的人 ・ 按 → 或右下角箭頭翻頁</p>
+  <div class="wiki">📚 Wiki 對應：<span>index.md</span></div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-wiki="learning-path">
+  <h2><small>ROADMAP</small>今天的 5 個步驟</h2>
+  <div class="steps">
+    <div class="step"><div class="n">01</div><p><b>一行動起來</b><br><code>gsap.to()</code></p></div>
+    <div class="step"><div class="n">02</div><p><b>進場動畫</b><br><code>from</code> + <code>stagger</code></p></div>
+    <div class="step"><div class="n">03</div><p><b>調手感</b><br><code>ease</code></p></div>
+    <div class="step"><div class="n">04</div><p><b>排順序</b><br><code>timeline</code></p></div>
+    <div class="step"><div class="n">05</div><p><b>跟著捲動</b><br><code>ScrollTrigger</code></p></div>
+  </div>
+  <p style="margin-top:3vh;color:var(--mute)">這個順序來自 Wiki 的 Query 結果：「完全沒碰過 GSAP 的人該照什麼順序學？」</p>
+  <div class="wiki">📚 Wiki 對應：<span>synthesis/learning-path.md</span></div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-wiki="overview">
+  <h2><small>WHAT</small>GSAP 是什麼？</h2>
+  <div class="grid">
+    <div>
+      <p>GSAP 是一個 <b>JavaScript 動畫函式庫</b>，可以動 CSS 屬性、HTML 屬性、數字、顏色。</p>
+      <p style="margin-top:1.5vh">寫 GSAP 只要想清楚三件事：</p>
+      <ul>
+        <li><b>誰</b> 要動？→ CSS 選擇器 <code>".box"</code></li>
+        <li><b>動成怎樣</b>？→ 屬性物件 <code>{ x: 200 }</code></li>
+        <li><b>什麼時候</b> 動？→ 馬上／排隊／捲到才動</li>
+      </ul>
+    </div>
+<pre><code>gsap.to(<span class="s">".box"</span>, {   <span class="c">// 誰</span>
+  x: <span class="k">200</span>,             <span class="c">// 動成怎樣</span>
+  duration: <span class="k">1</span>
+});                    <span class="c">// 什麼時候：馬上</span></code></pre>
+  </div>
+  <div class="wiki">📚 Wiki 對應：<span>overview.md</span> ・ 來源 [S1][S2]</div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-wiki="tween">
+  <h2><small>STEP 01</small>第一行動畫：<code>gsap.to()</code></h2>
+  <div class="grid">
+    <div>
+<pre><code>gsap.to(<span class="s">".box"</span>, {
+  x: <span class="k">260</span>,          <span class="c">// = translateX(260px)</span>
+  rotation: <span class="k">360</span>,
+  duration: <span class="k">1</span>       <span class="c">// 不寫的話預設 0.5 秒</span>
+});</code></pre>
+      <p style="margin-top:2vh">一段「從 A 值變到 B 值」的動畫叫做 <b>Tween（補間）</b>。<code>x</code>、<code>rotation</code> 是 transform 的簡寫。</p>
+    </div>
+    <div class="stage"><div class="box" id="d1">GO</div>
+      <div style="position:absolute;bottom:18px;left:22px"><button class="btn" id="d1play">播放</button><button class="btn ghost" id="d1rev">倒轉 reverse()</button></div></div>
+  </div>
+  <div class="wiki">📚 Wiki 對應：<span>concepts/tween.md</span> ・ 來源 [S2]</div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-wiki="tween">
+  <h2><small>STEP 02</small>to / from / fromTo 差在哪？</h2>
+  <table>
+    <tr><th>方法</th><th>意思</th><th>什麼時候用</th></tr>
+    <tr><td><code>gsap.to()</code></td><td>現在的樣子 → <b>你指定的值</b></td><td>一般移動、變色</td></tr>
+    <tr><td><code>gsap.from()</code></td><td><b>你指定的值</b> → 現在的樣子</td><td>⭐ 進場動畫（從透明飛進原位）</td></tr>
+    <tr><td><code>gsap.fromTo()</code></td><td>起點、終點都自己指定</td><td>要精準控制時</td></tr>
+  </table>
+  <p style="margin-top:3vh">兩個要背的預設值：<code>duration</code> = <b>0.5 秒</b>、<code>ease</code> = <b>"power1.out"</b></p>
+  <div class="wiki">📚 Wiki 對應：<span>concepts/tween.md</span> ・ 來源 [S2]</div>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-wiki="tween">
+  <h2><small>STEP 02</small>進場動畫 + <code>stagger</code></h2>
+  <div class="grid">
+    <div>
+<pre><code>gsap.from(<span class="s">".card"</span>, {
+  y: <span class="k">80</span>,
+  opacity: <span class="k">0</span>,
+  stagger: <span class="k">0.12</span>    <span class="c">// 每張晚 0.12 秒出發</span>
+});</code></pre>
+      <p style="margin-top:2vh"><code>stagger</code> 讓多個目標<b>錯開開始時間</b>：清單、抽獎卡片、作品集縮圖一張一張出現。</p>
+    </div>
+    <div class="stage"><div class="cards" id="cards"><div class="card">A</div><div class="card">B</div><div class="card">C</div><div class="card">D</div><div class="card">E</div></div>
+      <button class="btn" id="d2play">播放</button></div>
+  </div>
+  <div class="wiki">📚 Wiki 對應：<span>concepts/tween.md</span> ・ 來源 [S2]</div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-wiki="easing">
+  <h2><small>STEP 03</small>Ease：動畫的「手感」</h2>
+  <div class="grid">
+    <div>
+      <p>同樣 1 秒、同樣距離，換 <code>ease</code> 感覺就完全不同。</p>
+<pre style="margin-top:1.5vh"><code>gsap.to(<span class="s">".ball"</span>, { x: <span class="k">300</span>, ease: <span class="s">"back.out"</span> });</code></pre>
+      <ul style="margin-top:1.5vh">
+        <li>寫法：<code>"名稱.變化"</code>，例如 <code>"power2.out"</code></li>
+        <li><code>.out</code> 開頭快、結尾慢 → 自然停下，最適合 UI 進場</li>
+        <li><code>"none"</code> = 等速</li>
+      </ul>
+    </div>
+    <div class="stage" id="eases">
+      <div class="ball-row"><label>none</label><div class="ball"></div></div>
+      <div class="ball-row"><label>power2.out</label><div class="ball"></div></div>
+      <div class="ball-row"><label>back.out</label><div class="ball"></div></div>
+      <div class="ball-row"><label>bounce.out</label><div class="ball"></div></div>
+      <div class="ball-row"><label>elastic.out</label><div class="ball"></div></div>
+      <button class="btn" id="d3play">一起跑</button>
+    </div>
+  </div>
+  <div class="wiki">📚 Wiki 對應：<span>concepts/easing.md</span> ・ 來源 [S5]（in/out 解釋為一般慣例，Wiki 已註明）</div>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-wiki="timeline">
+  <h2><small>STEP 04</small>為什麼需要 Timeline？</h2>
+  <div class="grid">
+<pre><code><span class="c">// ❌ 不用 timeline：手算 delay</span>
+gsap.to(<span class="s">"#a"</span>, { x: <span class="k">300</span>, duration: <span class="k">1</span> });
+gsap.to(<span class="s">"#b"</span>, { x: <span class="k">300</span>, duration: <span class="k">1</span>, delay: <span class="k">1</span> });
+gsap.to(<span class="s">"#c"</span>, { x: <span class="k">300</span>, duration: <span class="k">1</span>, delay: <span class="k">2</span> });
+<span class="c">// 第一段改成 2 秒 → 後面 delay 全部要改 😵</span></code></pre>
+<pre><code><span class="c">// ✅ 用 timeline：自動接上</span>
+<span class="k">let</span> tl = gsap.timeline();
+tl.to(<span class="s">"#a"</span>, { x: <span class="k">300</span>, duration: <span class="k">1</span> })
+  .to(<span class="s">"#b"</span>, { x: <span class="k">300</span>, duration: <span class="k">1</span> })
+  .to(<span class="s">"#c"</span>, { x: <span class="k">300</span>, duration: <span class="k">1</span> });
+tl.reverse(); <span class="c">// 一行整組倒轉</span></code></pre>
+  </div>
+  <p style="margin-top:3vh">Timeline = 裝 tween 的容器。<b>只要有 2 段以上有先後順序的動畫，就用它。</b></p>
+  <div class="wiki">📚 Wiki 對應：<span>concepts/timeline.md</span> ・ 來源 [S3]</div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-wiki="timeline">
+  <h2><small>STEP 04</small>位置參數：第三個參數決定「何時插入」</h2>
+  <div class="grid">
+    <div>
+<pre><code>tl.to(<span class="s">"#a"</span>, { x: <span class="k">260</span> })
+  .to(<span class="s">"#b"</span>, { x: <span class="k">260</span> })          <span class="c">// 接在後面</span>
+  .to(<span class="s">"#c"</span>, { x: <span class="k">260</span> }, <span class="s">"&lt;"</span>)     <span class="c">// 跟上一段同時</span>
+  .to(<span class="s">"#d"</span>, { x: <span class="k">260</span> }, <span class="s">"-=0.5"</span>); <span class="c">// 提早 0.5 秒</span></code></pre>
+      <table style="margin-top:2vh">
+        <tr><td><code>"&lt;"</code></td><td>上一段<b>開始</b>時</td></tr>
+        <tr><td><code>"-=0.5"</code> / <code>"+=1"</code></td><td>重疊 0.5 秒 / 空 1 秒</td></tr>
+        <tr><td><code>3</code></td><td>第 3 秒（絕對時間）</td></tr>
+      </table>
+    </div>
+    <div class="stage" id="tlStage">
+      <div class="ball-row"><label>#a</label><div class="ball"></div></div>
+      <div class="ball-row"><label>#b</label><div class="ball"></div></div>
+      <div class="ball-row"><label>#c  "&lt;"</label><div class="ball"></div></div>
+      <div class="ball-row"><label>#d  "-=0.5"</label><div class="ball"></div></div>
+      <button class="btn" id="d4play">播放</button><button class="btn ghost" id="d4rev">reverse()</button>
+    </div>
+  </div>
+  <div class="wiki">📚 Wiki 對應：<span>concepts/timeline.md</span> ・ 來源 [S3]</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-wiki="scrolltrigger">
+  <h2><small>STEP 05</small>ScrollTrigger：捲到才動</h2>
+  <div class="grid">
+    <div>
+<pre><code>gsap.registerPlugin(ScrollTrigger); <span class="c">// 外掛要先註冊！</span>
+
+gsap.from(<span class="s">".section"</span>, {
+  opacity: <span class="k">0</span>, y: <span class="k">60</span>,
+  scrollTrigger: {
+    trigger: <span class="s">".section"</span>,
+    start: <span class="s">"top center"</span>,
+    markers: <span class="k">true</span>   <span class="c">// 開發時顯示起訖線</span>
+  }
+});</code></pre>
+    </div>
+    <div>
+      <p><code>start: "top center"</code> 怎麼讀？</p>
+      <p style="margin-bottom:1.5vh"><b>第一個字 = 元素</b>的哪裡，<b>第二個字 = 畫面</b>的哪裡。</p>
+      <div class="viewport-diag"><div class="mid"><span>畫面 center</span></div><div class="el" id="diagEl">.section</div></div>
+      <p style="font-size:14px;color:var(--mute);margin-top:8px">↑ 元素的 top 碰到畫面中線 → 開始播</p>
+    </div>
+  </div>
+  <div class="wiki">📚 Wiki 對應：<span>concepts/scrolltrigger.md</span> ・ 來源 [S4]</div>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-wiki="scrolltrigger">
+  <h2><small>STEP 05</small>兩種模式：toggleActions vs scrub</h2>
+  <div class="grid">
+    <table>
+      <tr><th></th><th>toggleActions</th><th>scrub</th></tr>
+      <tr><td>行為</td><td>碰到線就<b>播一次</b></td><td><b>捲多少播多少</b>，像拖影片進度條</td></tr>
+      <tr><td>預設</td><td><code>"play none none none"</code></td><td><code>true</code> 或秒數（平滑）</td></tr>
+      <tr><td>例子</td><td>區塊淡入</td><td>視差、橫向捲動展示</td></tr>
+    </table>
+    <div class="stage">
+      <p style="font-size:15px;color:var(--mute)">試試看：把滑桿當作捲軸（模擬 scrub）</p>
+      <div style="height:90px;position:relative;margin:14px 0"><div class="box" id="scrubBox" style="position:absolute;top:12px">%</div></div>
+      <input type="range" min="0" max="100" value="0" id="scrub">
+      <p style="font-size:14px;color:var(--mute);margin-top:8px">註：這個 demo 是用 tween 的 <code>progress()</code> 模擬「拖進度條」的感覺，不是真的 ScrollTrigger。</p>
+    </div>
+  </div>
+  <div class="wiki">📚 Wiki 對應：<span>concepts/scrolltrigger.md</span> ・ 來源 [S4][S3]</div>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-wiki="scrolltrigger">
+  <h2><small>DEBUG</small>新手最常踩的 4 個雷</h2>
+  <table>
+    <tr><th>症狀</th><th>原因 / 解法</th></tr>
+    <tr><td class="warn">本機正常，上線就壞</td><td>忘記 <code>gsap.registerPlugin(ScrollTrigger)</code></td></tr>
+    <tr><td class="warn">pin 住的東西位置亂跳</td><td>不要動被 pin 的元素本身，<b>改動它的子元素</b></td></tr>
+    <tr><td class="warn">timeline 捲動怪怪的</td><td>不要每個子 tween 各掛 ScrollTrigger，<b>掛一個在 timeline 上</b></td></tr>
+    <tr><td class="warn">pin 完全沒作用</td><td>祖先元素有 <code>transform</code> / <code>will-change</code>，拿掉它</td></tr>
+  </table>
+  <div class="wiki">📚 Wiki 對應：<span>concepts/scrolltrigger.md</span>「常見錯誤」 ・ 來源 [S4]</div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-wiki="plugins-and-install">
+  <h2><small>SETUP</small>怎麼裝？要錢嗎？</h2>
+  <div class="grid">
+    <div>
+      <p>✅ 2025 年 4 月起 <b>GSAP 100% 免費、可商用</b>，連以前付費的 SplitText、MorphSVG 都免費。</p>
+      <p class="warn" style="margin-top:1.5vh">⚠️ 2025 以前的教學說「外掛要付費」→ 已過時</p>
+      <p style="margin-top:1.5vh">常用外掛：捲動 ScrollTrigger、文字 SplitText、SVG DrawSVG / MorphSVG、拖曳 Draggable、React 用 <code>useGSAP()</code></p>
+    </div>
+<pre><code><span class="c"># npm</span>
+npm install gsap
+
+<span class="c">// JS</span>
+<span class="k">import</span> gsap <span class="k">from</span> <span class="s">"gsap"</span>;
+<span class="k">import</span> { ScrollTrigger } <span class="k">from</span> <span class="s">"gsap/ScrollTrigger"</span>;
+gsap.registerPlugin(ScrollTrigger);</code></pre>
+  </div>
+  <div class="wiki">📚 Wiki 對應：<span>concepts/plugins-and-install.md</span> ・ 來源 [S6][S1]</div>
+</section>
+
+<!-- 14 -->
+<section class="slide" data-wiki="learning-path">
+  <h2><small>QUIZ</small>3 題小測驗（點題目看答案）</h2>
+  <div class="quiz"><p>Q1. 想做「卡片從下面淡入到原位」，用 <code>to</code> 還是 <code>from</code>？</p><p class="a">→ <code>gsap.from(".card", { y: 80, opacity: 0 })</code>，從指定值回到現在的樣子。</p></div>
+  <div class="quiz"><p>Q2. 不寫 duration 和 ease，預設是多少？</p><p class="a">→ 0.5 秒、"power1.out"。</p></div>
+  <div class="quiz"><p>Q3. <code>start: "top center"</code> 的 top 是誰的 top？</p><p class="a">→ 元素（trigger）的 top；center 是畫面的。</p></div>
+  <p style="margin-top:2vh">🎯 下一步：拿自己的作品集首頁，先用 <code>from + stagger</code> 做進場，再加一個 ScrollTrigger 淡入。</p>
+  <div class="wiki">📚 Wiki 對應：<span>tween.md ・ scrolltrigger.md ・ learning-path.md</span></div>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-wiki="index">
+  <h2><small>SOURCES</small>參考資料（Wiki raw sources）</h2>
+  <ul>
+    <li>[S1] GSAP 官方文件 v3 — <a style="color:var(--acc2)" href="https://gsap.com/docs/v3/">gsap.com/docs/v3</a></li>
+    <li>[S2] Tween — <a style="color:var(--acc2)" href="https://gsap.com/docs/v3/GSAP/Tween">gsap.com/docs/v3/GSAP/Tween</a></li>
+    <li>[S3] Timeline — <a style="color:var(--acc2)" href="https://gsap.com/docs/v3/GSAP/Timeline">gsap.com/docs/v3/GSAP/Timeline</a></li>
+    <li>[S4] ScrollTrigger — <a style="color:var(--acc2)" href="https://gsap.com/docs/v3/Plugins/ScrollTrigger/">gsap.com/docs/v3/Plugins/ScrollTrigger</a></li>
+    <li>[S5] Eases — <a style="color:var(--acc2)" href="https://gsap.com/docs/v3/Eases">gsap.com/docs/v3/Eases</a></li>
+    <li>[S6] GSAP 3.13 免費公告 — <a style="color:var(--acc2)" href="https://gsap.com/blog/3-13/">gsap.com/blog/3-13</a></li>
+  </ul>
+  <p style="margin-top:3vh;color:var(--mute)">本簡報每一頁左下角都標註對應的 Wiki 頁面與來源編號。簡報內的互動 demo 由 GSAP 實際執行。</p>
+  <div class="wiki">📚 Wiki 對應：<span>raw/sources.md</span></div>
+</section>
+</main>
+
+<div class="nav"><span class="count" id="count">1 / 15</span><button id="prev" aria-label="上一頁">←</button><button id="next" aria-label="下一頁">→</button></div>
+
+<script>%%GSAP%%</script>
+<script>
+const deck=document.getElementById('deck'),slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+function go(i){cur=Math.max(0,Math.min(slides.length-1,i));slides[cur].scrollIntoView({behavior:'smooth',inline:'start'});}
+function upd(){const i=Math.round(deck.scrollLeft/deck.clientWidth);cur=i;document.getElementById('count').textContent=(i+1)+' / '+slides.length;document.getElementById('bar').style.width=((i+1)/slides.length*100)+'%';}
+deck.addEventListener('scroll',upd);
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();go(cur+1)}if(e.key==='ArrowLeft'){e.preventDefault();go(cur-1)}});
+upd();
+
+// cover dots
+const bg=document.getElementById('coverBg');
+for(let i=0;i<14;i++){const d=document.createElement('div');d.className='dot';const s=8+Math.random()*34;Object.assign(d.style,{width:s+'px',height:s+'px',left:(55+Math.random()*42)+'%',top:(8+Math.random()*80)+'%',background:i%3?'#b8f34a':'#7cc4ff'});bg.appendChild(d);}
+gsap.to('.dot',{y:'random(-40,40)',x:'random(-30,30)',duration:'random(2,4)',repeat:-1,yoyo:true,ease:'sine.inOut',stagger:0.1});
+
+// demo 1
+const t1=gsap.to('#d1',{x:260,rotation:360,duration:1,paused:true});
+document.getElementById('d1play').onclick=()=>t1.restart();
+document.getElementById('d1rev').onclick=()=>t1.reverse();
+// demo 2 stagger
+document.getElementById('d2play').onclick=()=>gsap.fromTo('#cards .card',{y:80,opacity:0},{y:0,opacity:1,stagger:0.12,duration:0.6,ease:'power2.out'});
+// demo 3 eases
+const easeNames=['none','power2.out','back.out','bounce.out','elastic.out'];
+document.getElementById('d3play').onclick=()=>{document.querySelectorAll('#eases .ball').forEach((b,i)=>gsap.fromTo(b,{x:0},{x:()=>b.parentElement.clientWidth-170,duration:1.4,ease:easeNames[i]}));};
+// demo 4 timeline
+const tb=document.querySelectorAll('#tlStage .ball');
+const dist=()=>tb[0].parentElement.clientWidth-170;
+const tl=gsap.timeline({paused:true,defaults:{duration:1,ease:'power1.out'}});
+tl.to(tb[0],{x:dist}).to(tb[1],{x:dist}).to(tb[2],{x:dist},'<').to(tb[3],{x:dist},'-=0.5');
+document.getElementById('d4play').onclick=()=>tl.restart();
+document.getElementById('d4rev').onclick=()=>tl.reverse();
+// diagram loop
+gsap.fromTo('#diagEl',{top:'105%'},{top:'50%',duration:2.4,ease:'power1.inOut',repeat:-1,repeatDelay:0.8,yoyo:true});
+// scrub sim
+const sb=document.getElementById('scrubBox');
+const st=gsap.to(sb,{x:()=>sb.parentElement.clientWidth-64,backgroundColor:'#7cc4ff',ease:'none',paused:true});
+document.getElementById('scrub').oninput=e=>{st.progress(e.target.value/100);sb.textContent=e.target.value+'%';};
+// quiz
+document.querySelectorAll('.quiz').forEach(q=>q.onclick=()=>q.classList.toggle('open'));
+</script>
+</body>
+</html>
